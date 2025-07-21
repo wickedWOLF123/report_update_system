@@ -9,17 +9,67 @@ readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.9"
 dependencies = [
+    # Core LangGraph and LangChain
     "langgraph>=0.2.19",
+    "langchain>=0.2.14",
     "langchain-openai>=0.1.22",
     "langchain-anthropic>=0.1.23",
-    "langchain>=0.2.14",
     "langchain-fireworks>=0.1.7",
-    "python-dotenv>=1.0.1",
     "langchain-community>=0.2.13",
+    "langchain-core>=0.2.0",
+    "langgraph-sdk>=0.1.0",
+    
+    # Document Processing
+    "pymupdf>=1.23.0",  # PDF parsing (fitz)
+    "pdfplumber>=0.11.0",  # Alternative PDF parser
+    "python-docx>=1.1.0",  # Word document support
+    "pypdf>=4.0.0",  # Another PDF option
+    
+    # Vector Database & RAG
+    "chromadb>=0.4.0",  # Vector database
+    "faiss-cpu>=1.7.4",  # Alternative vector search
+    "sentence-transformers>=2.2.0",  # Embeddings
+    "tiktoken>=0.5.0",  # Token counting
+    
+    # Web Scraping & HTTP
+    "aiohttp>=3.9.0",  # Async HTTP client
+    "beautifulsoup4>=4.12.0",  # HTML parsing
+    "requests>=2.31.0",  # HTTP requests
+    
+    # Data Processing
+    "pandas>=2.0.0",  # Data manipulation
+    "numpy>=1.24.0",  # Numerical operations
+    
+    # Configuration & Environment
+    "python-dotenv>=1.0.1",
+    "pydantic>=2.0.0",  # Data validation
+    
+    # Utilities
+    "python-magic>=0.4.27",  # File type detection
+    "chardet>=5.2.0",  # Character encoding detection
 ]
 
 [project.optional-dependencies]
-dev = ["mypy>=1.11.1", "ruff>=0.6.1", "pytest-asyncio"]
+dev = [
+    # Type checking and linting
+    "mypy>=1.11.1", 
+    "ruff>=0.6.1", 
+    
+    # Testing
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.11.0",
+    "pytest-cov>=4.1.0",
+    
+    # LangGraph Development
+    "langgraph-cli[inmem]>=0.1.0",  # LangGraph CLI tools with inmem support
+
+    # Development utilities
+    "jupyter>=1.0.0",
+    "ipython>=8.0.0",
+    "black>=23.0.0",  # Code formatting
+    "pre-commit>=3.0.0",  # Git hooks
+]
 
 [build-system]
 requires = ["setuptools>=73.0.0", "wheel"]

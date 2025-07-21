@@ -162,3 +162,27 @@ cython_debug/
 #.idea/
 .DS_Store
 uv.lock
+
+# Project-specific files
+PROJECT_NOTES.md
+DEVELOPMENT_LOG.md
+
+# Vector databases and knowledge base
+*.faiss
+*.chroma
+chroma_db/
+vector_store/
+knowledge_bank/
+
+# Sample documents for testing
+test_documents/
+sample_pdfs/
+test_reports/
+
+# Generated reports
+generated_reports/
+output/
+
+# LangGraph Studio specific
+.langgraph/
+langgraph.db
