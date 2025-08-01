@@ -16,8 +16,15 @@ from langgraph.prebuilt import InjectedState
 from typing_extensions import Annotated
 
 from enrichment_agent.configuration import Configuration
-from enrichment_agent.state import State
-from enrichment_agent.utils import init_model
+from enrichment_agent.state import State, DocumentInfo, DocumentStructure
+from enrichment_agent.utils import (
+    validate_document,
+    extract_title_with_vision,
+    find_toc_pages,
+    extract_toc_from_page_with_vision,
+    extract_bibliography_full_pipeline,
+    init_model
+)
 
 
 async def search(
@@ -72,3 +79,64 @@ async def scrape_website(
     raw_model = init_model(config)
     result = await raw_model.ainvoke(p)
     return str(result.content)
+
+
+async def validate_document_tool(
+    *,
+    pdf_path: str,
+    state: Annotated[State, InjectedState],
+    config: Annotated[RunnableConfig, InjectedToolArg],
+) -> dict:
+    """Validate a PDF document and update state with basic metadata."""
+    result = validate_document(pdf_path)
+    if not state.document_info:
+        state.document_info = DocumentInfo()
+    state.document_info.path = pdf_path
+    state.document_info.file_type = "PDF"
+    state.document_info.title = result["metadata"].get("title")
+    state.document_info.publication_date = result["metadata"].get("publication_date")
+    return result
+
+async def extract_title_tool(
+    *,
+    pdf_path: str,
+    state: Annotated[State, InjectedState],
+    config: Annotated[RunnableConfig, InjectedToolArg],
+) -> dict:
+    """Extract document title using vision model and update state."""
+    title = extract_title_with_vision(pdf_path, config)
+    if not state.document_info:
+        state.document_info = DocumentInfo()
+    state.document_info.title = title
+    return {"title": title}
+
+async def extract_toc_tool(
+    *,
+    pdf_path: str,
+    state: Annotated[State, InjectedState],
+    config: Annotated[RunnableConfig, InjectedToolArg],
+) -> dict:
+    """Extract table of contents and update state."""
+    toc_pages = find_toc_pages(pdf_path)
+    toc_entries = []
+    for page in toc_pages:
+        toc_entries.extend(extract_toc_from_page_with_vision(pdf_path, page, config))
+    if not state.document_structure:
+        state.document_structure = DocumentStructure()
+    state.document_structure.table_of_contents = toc_entries
+    return {"toc": toc_entries}
+
+async def extract_references_tool(
+    *,
+    pdf_path: str,
+    state: Annotated[State, InjectedState],
+    config: Annotated[RunnableConfig, InjectedToolArg],
+) -> dict:
+    """Extract references/bibliography and update state."""
+    references = extract_bibliography_full_pipeline(pdf_path, config)
+    if not state.document_structure:
+        state.document_structure = DocumentStructure()
+    state.document_structure.references = references
+    return {"references": references}
+
+

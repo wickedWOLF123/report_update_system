@@ -21,6 +21,25 @@ class Configuration:
             "Should be in the form: provider/model-name."
         },
     )
+    
+
+
+    vision_model: Annotated[str, {"__template_metadata__": {"kind": "llm"}}] = field(
+        default="anthropic/claude-3-5-haiku-20241022",
+        metadata={
+            "description": "The name of the vision-capable language model to use for visual document analysis like title and table of contents extraction. "
+            "Should be in the form: provider/model-name. Supports anthropic/claude-3-5-haiku-20241022 or openai/gpt-4o-mini."
+        },
+    )
+
+    bibliography_vision_model: Annotated[str, {"__template_metadata__": {"kind": "llm"}}] = field(
+        default="openai/gpt-4o",
+        metadata={
+            "description": "The name of the vision-capable language model to use specifically for bibliography extraction. "
+            "Uses a more powerful model to handle complex bibliography parsing and avoid truncation. "
+            "Should be in the form: provider/model-name. Supports anthropic/claude-3-5-sonnet-20240620 or openai/gpt-4o."
+        },
+    )
 
     prompt: str = field(
         default=prompts.MAIN_PROMPT,

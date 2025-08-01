@@ -16,7 +16,10 @@ from pydantic import BaseModel, Field
 from enrichment_agent import prompts
 from enrichment_agent.configuration import Configuration
 from enrichment_agent.state import InputState, OutputState, State
-from enrichment_agent.tools import scrape_website, search
+from enrichment_agent.tools import (
+    scrape_website, search,
+    validate_document_tool, extract_title_tool, extract_toc_tool, extract_references_tool
+)
 from enrichment_agent.utils import init_model
 
 
@@ -81,6 +84,34 @@ async def call_agent_model(
         # Add 1 to the step count
         "loop_step": 1,
     }
+
+
+async def document_analysis(
+    state: State, *, config: Optional[RunnableConfig] = None
+) -> State:
+    """Run document validation, title, TOC, and references extraction, updating the state."""
+    pdf_path = state.document_path
+    if not pdf_path:
+        print("❌ No document_path provided in state!")
+        return state
+    try:
+        await validate_document_tool(pdf_path=pdf_path, state=state, config=config)
+    except Exception as e:
+        print(f"⚠️ validate_document_tool failed: {e}")
+    try:
+        await extract_title_tool(pdf_path=pdf_path, state=state, config=config)
+    except Exception as e:
+        print(f"⚠️ extract_title_tool failed: {e}")
+    try:
+        await extract_toc_tool(pdf_path=pdf_path, state=state, config=config)
+    except Exception as e:
+        print(f"⚠️ extract_toc_tool failed: {e}")
+    try:
+        await extract_references_tool(pdf_path=pdf_path, state=state, config=config)
+    except Exception as e:
+        print(f"⚠️ extract_references_tool failed: {e}")
+    state.processing_stage = "document_analysis_complete"
+    return state
 
 
 class InfoIsSatisfactory(BaseModel):
@@ -218,10 +249,12 @@ def route_after_checker(
 workflow = StateGraph(
     State, input=InputState, output=OutputState, config_schema=Configuration
 )
+workflow.add_node(document_analysis)
 workflow.add_node(call_agent_model)
 workflow.add_node(reflect)
 workflow.add_node("tools", ToolNode([search, scrape_website]))
-workflow.add_edge("__start__", "call_agent_model")
+workflow.add_edge("__start__", "document_analysis")
+workflow.add_edge("document_analysis", "call_agent_model")
 workflow.add_conditional_edges("call_agent_model", route_after_agent)
 workflow.add_edge("tools", "call_agent_model")
 workflow.add_conditional_edges("reflect", route_after_checker)

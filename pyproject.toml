@@ -25,6 +25,12 @@ dependencies = [
     "python-docx>=1.1.0",  # Word document support
     "pypdf>=4.0.0",  # Another PDF option
     
+    # OCR and Image Processing
+    "pytesseract>=0.3.10",  # OCR text extraction (backup)
+    "easyocr>=1.7.0",  # Primary OCR solution - no system dependencies
+    "opencv-python>=4.8.0",  # Required by EasyOCR
+    "pillow>=10.0.0",  # Image processing for OCR
+    
     # Vector Database & RAG
     "chromadb>=0.4.0",  # Vector database
     "faiss-cpu>=1.7.4",  # Alternative vector search
@@ -39,6 +45,7 @@ dependencies = [
     # Data Processing
     "pandas>=2.0.0",  # Data manipulation
     "numpy>=1.24.0",  # Numerical operations
+    "pymupdf4llm>=0.0.20",
     
     # Configuration & Environment
     "python-dotenv>=1.0.1",
@@ -47,6 +54,8 @@ dependencies = [
     # Utilities
     "python-magic>=0.4.27",  # File type detection
     "chardet>=5.2.0",  # Character encoding detection
+    "easyocr>=1.7.0",
+    "opencv-python>=4.8.0",  # Required by EasyOCR
 ]
 
 [project.optional-dependencies]
@@ -69,6 +78,8 @@ dev = [
     "ipython>=8.0.0",
     "black>=23.0.0",  # Code formatting
     "pre-commit>=3.0.0",  # Git hooks
+
+    
 ]
 
 [build-system]
