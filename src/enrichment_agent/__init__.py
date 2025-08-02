@@ -3,9 +3,7 @@
 from enrichment_agent.graph import graph
 from enrichment_agent.state import (
     DocumentInfo,
-    DocumentStructure, 
-    AnalyticalFramework,
-    ResearchResults,
+    DocumentStructure,
     State,
     InputState,
     OutputState
@@ -14,10 +12,8 @@ from enrichment_agent.state import (
 __all__ = [
     "graph",
     "DocumentInfo",
-    "DocumentStructure", 
-    "AnalyticalFramework",
-    "ResearchResults",
+    "DocumentStructure",
     "State",
-    "InputState", 
+    "InputState",
     "OutputState"
 ]

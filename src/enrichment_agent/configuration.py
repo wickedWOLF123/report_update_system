@@ -32,14 +32,6 @@ class Configuration:
         },
     )
 
-    bibliography_vision_model: Annotated[str, {"__template_metadata__": {"kind": "llm"}}] = field(
-        default="openai/gpt-4o",
-        metadata={
-            "description": "The name of the vision-capable language model to use specifically for bibliography extraction. "
-            "Uses a more powerful model to handle complex bibliography parsing and avoid truncation. "
-            "Should be in the form: provider/model-name. Supports anthropic/claude-3-5-sonnet-20240620 or openai/gpt-4o."
-        },
-    )
 
     prompt: str = field(
         default=prompts.MAIN_PROMPT,
@@ -50,7 +42,7 @@ class Configuration:
     )
 
     max_search_results: int = field(
-        default=10,
+        default=4,
         metadata={
             "description": "The maximum number of search results to return for each search query."
         },

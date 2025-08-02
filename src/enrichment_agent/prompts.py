@@ -267,3 +267,66 @@ Example format:
 
 Bibliography text to parse:
 {bibliography_text}"""
+
+METADATA_EXTRACTION_PROMPT = """You are a metadata extractor. Given the user query, extract the metadata from the provided text.
+
+You need to extract the metadata from the user query and return it in a JSON format.
+The only thing that must exist in the JSON is the year. If no year is in the user query default to current year.
+
+**CRITICAL: You must return ONLY valid JSON. No other text, no explanations, no markdown formatting.**
+
+Here are some examples of user queries and the expected metadata:
+
+1.
+User Query: "Update the Nepal HACT Macro Assessment indicators to 2025 data."
+Output:
+{{
+  "country": "Nepal",
+  "title": "HACT Macro Assessment",
+  "year": 2025
+}}
+
+2.
+User Query: "Find the latest World Bank report on poverty in Nepal from 2023."
+Output:
+{{
+  "organization": "World Bank",
+  "topic": "poverty",
+  "country": "Nepal",
+  "year": 2023
+}}
+
+3.
+User Query: "I want an updated UNDP Human Development Report for Bangladesh for 2024."
+Output:
+{{
+  "organization": "UNDP",
+  "title": "Human Development Report",
+  "country": "Bangladesh",
+  "year": 2024
+}}
+
+4.
+User Query: "Show me the economic outlook report of India by IMF from this year."
+Output:
+{{
+  "country": "India",
+  "organization": "IMF",
+  "title": "economic outlook report",
+  "year": 2025
+}}
+
+5.
+User Query: "Get me documents on climate change adaptation strategies for Maldives."
+Output:
+{{
+  "topic": "climate change adaptation strategies",
+  "country": "Maldives",
+  "year": 2025
+}}
+
+Return only valid JSON. If some metadata is not present in the user query, exclude the respective field. The year should be an integer. If the year is described vaguely like 'this year' or 'latest', interpret it as the current year 2025.
+
+Current year: {current_year}
+
+User Query: {user_query}"""

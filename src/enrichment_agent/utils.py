@@ -4,9 +4,11 @@ import base64
 import json
 import os
 import re
+from datetime import datetime
 from typing import Dict, List, Optional
 
-import pymupdf4llm
+import fitz
+
 from langchain.chat_models import init_chat_model
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AnyMessage, HumanMessage
@@ -22,29 +24,7 @@ try:
 except ImportError:
     print("⚠️ python-dotenv not available, skipping .env loading")
 
-import fitz
 
-def get_page_1_text_simple(pdf_path: str) -> str:
-    """
-    Extract and return all text from page 1 of a PDF using PyMuPDF.
-    """
-    try:
-        doc = fitz.open(pdf_path)
-        if len(doc) == 0:
-            print("❌ PDF has no pages")
-            return ""
-        page = doc[0]
-        text = page.get_text()
-        print("📄 TEXT FROM PAGE 1:")
-        print("=" * 50)
-        print(text)
-        print("=" * 50)
-        print(f"✅ Total characters: {len(text)}")
-        doc.close()
-        return text
-    except Exception as e:
-        print(f"❌ Error reading PDF: {e}")
-        return ""
 
 def validate_document(pdf_path: str) -> Dict[str, any]:
     """
@@ -89,7 +69,7 @@ def validate_document(pdf_path: str) -> Dict[str, any]:
             print(f"⚠️ Warnings: {', '.join(validation_result['warnings'])}")
     except Exception as e:
         validation_result["errors"].append(f"PDF validation failed: {str(e)}")
-        print(f"❌ Document validation failed: {str(e)}")
+        print(f"Document validation failed: {str(e)}")
     return validation_result
 
 def get_message_text(msg: AnyMessage) -> str:
@@ -137,7 +117,7 @@ def init_vision_model(config: Optional[RunnableConfig] = None) -> BaseChatModel:
     print(f"🤖 Initializing vision model: {model_name}")
     return init_chat_model(model, model_provider=provider)
 
-def extract_first_page_as_image(pdf_path: str) -> bytes:
+def extract_first_page_as_image(pdf_path: str, page_num: int = 0) -> bytes:
     """
     Convert the first page of a PDF to PNG image data.
     """
@@ -148,7 +128,7 @@ def extract_first_page_as_image(pdf_path: str) -> bytes:
         if len(doc) == 0:
             doc.close()
             raise ValueError("PDF has no pages")
-        page = doc[0]
+        page = doc[page_num]
         pix = page.get_pixmap(matrix=fitz.Matrix(2.0, 2.0))
         image_data = pix.tobytes("png")
         pix = None
@@ -162,7 +142,7 @@ def extract_title_with_vision(pdf_path: str, config: Optional[RunnableConfig] = 
     Extract document title using a vision model on the first page image.
     """
     try:
-        image_data = extract_first_page_as_image(pdf_path)
+        image_data = extract_first_page_as_image(pdf_path, 0)
         image_base64 = base64.b64encode(image_data).decode('utf-8')
         vision_model = init_vision_model(config)
         message = HumanMessage(
@@ -648,3 +628,42 @@ def detect_tables_by_text_analysis(pdf_path: str, page_num: int, min_columns: in
     except Exception as e:
         print(f"❌ Text-based table detection failed: {e}")
         return []
+    
+    
+def extract_metadata_from_user_query(user_query: str) -> Dict:
+    """
+    Extract metadata from the user query.
+    """
+    metadata = {}
+    
+    try:
+        print(f"Extracting metadata from user query: {user_query}")
+        model = init_chat_model("gpt-4.1-nano-2025-04-14", model_provider="openai")
+        metadata_prompt = prompts.METADATA_EXTRACTION_PROMPT.format(user_query=user_query, current_year=datetime.now().year)
+        message = HumanMessage(content=metadata_prompt)
+        response = model.invoke([message])
+        metadata = json.loads(response.content)
+    except Exception as e:
+        print(f"❌ Metadata extraction failed: {e}")
+        return {}
+    
+    return metadata
+
+
+def generate_search_query(user_query: str, reference: dict) -> str:
+    '''
+    Generate a search query based on the metadata and reference.
+    ''' 
+    
+    name, year, link = reference.get("name"), reference.get("year"), reference.get("link")
+    metadata = extract_metadata_from_user_query(user_query)
+    query_year = metadata.get("year")
+    
+    cleaned_name = re.sub(r"\b(20\d{2}|19\d{2})\b", "", name).strip()
+    
+    query_parts = [cleaned_name]
+    if query_year:
+        query_parts.append(str(query_year))
+    query_parts.extend([str(v) for k, v in metadata.items() if v and k != "year" ])
+    search_query = " ".join(query_parts).strip()
+    return search_query
